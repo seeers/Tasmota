@@ -17,22 +17,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*********************************************************************************************\
- * Preferred IDE is Visual Studio Code with PlatformIO extension which doesn't need prerequisites
- *
- * Limited support for Arduino IDE needs Prerequisites:
- *    - Change libraries/PubSubClient/src/PubSubClient.h
- *       #define MQTT_MAX_PACKET_SIZE 1200
- *
- *  Arduino IDE 1.8.12 and up parameters for partly support
- *    - Select IDE Tools - Board: "Generic ESP8266 Module"
- *    - Select IDE Tools - Flash Mode: "DOUT (compatible)"
- *    - Select IDE Tools - Flash Size: "1M (FS:none OTA:~502KB)"
- *    - Select IDE Tools - LwIP Variant: "v2 Higher Bandwidth (no feature)"
- *    - Select IDE Tools - VTables: "Flash"
- *    - Select IDE Tools - Espressif FW: "nonos-sdk-2.2.1+100 (190703)"
-\*********************************************************************************************/
-
 // Location specific includes
 #ifndef ESP32_STAGE                         // ESP32 Stage has no core_version.h file. Disable include via PlatformIO Option
 #include <core_version.h>                   // Arduino_Esp8266 version information (ARDUINO_ESP8266_RELEASE and ARDUINO_ESP8266_RELEASE_2_7_1)
@@ -196,13 +180,18 @@ struct {
   String backlog[MAX_BACKLOG];              // Command backlog buffer
 #endif
 
+#ifdef MQTT_DATA_STRING
+  String mqtt_data;                         // Buffer filled by Response functions
+#else
+  char mqtt_data[MESSZ];                    // MQTT publish buffer
+#endif
+
   char version[16];                         // Composed version string like 255.255.255.255
   char image_name[33];                      // Code image and/or commit
   char hostname[33];                        // Composed Wifi hostname
   char serial_in_buffer[INPUT_BUFFER_SIZE];  // Receive buffer
   char mqtt_client[99];                     // Composed MQTT Clientname
   char mqtt_topic[TOPSZ];                   // Composed MQTT topic
-  char mqtt_data[MESSZ];                    // MQTT publish buffer and web page ajax buffer
   char log_buffer[LOG_BUFFER_SIZE];         // Web log buffer
 } TasmotaGlobal;
 

@@ -974,14 +974,14 @@ int SafeAddLog_P(uint32_t loglevel, PGM_P formatP, ...) {
   vsnprintf_P(BLE_temp_log_data, maxlen, formatP, arg);
   va_end(arg);
 #ifdef USE_NATIVE_LOGGING
-  AddLog_P(loglevel, PSTR("%s"), BLE_temp_log_data);
+  AddLog(loglevel, PSTR("%s"), BLE_temp_log_data);
   return 1;
 #else
   if (thistask == TasmotaMainTask){
     loglevel = LOG_LEVEL_ERROR;
     snprintf(BLE_temp_log_data + strlen(BLE_temp_log_data), 13, "-!MAINTHREAD!");
     xSemaphoreGive(SafeLogMutex); // release mutex
-    AddLog_P(loglevel, PSTR("%s"), BLE_temp_log_data);
+    AddLog(loglevel, PSTR("%s"), BLE_temp_log_data);
     return 0;
   }
 
@@ -1259,8 +1259,11 @@ void postAdvertismentDetails(){
 
   TasAutoMutex localmutex(&BLEOperationsRecursiveMutex, "BLEPostAdd");
   if (BLEAdvertismentDetailsJsonSet){
-    strncpy(TasmotaGlobal.mqtt_data, BLEAdvertismentDetailsJson, sizeof(TasmotaGlobal.mqtt_data));
-    TasmotaGlobal.mqtt_data[sizeof(TasmotaGlobal.mqtt_data)-1] = 0;
+
+//    strncpy(TasmotaGlobal.mqtt_data, BLEAdvertismentDetailsJson, sizeof(TasmotaGlobal.mqtt_data));
+//    TasmotaGlobal.mqtt_data[sizeof(TasmotaGlobal.mqtt_data)-1] = 0;
+    Response_P(BLEAdvertismentDetailsJson);
+
     BLEAdvertismentDetailsJsonSet = 0;
     // we got the data, give before MQTT call.
     localmutex.give();
@@ -3142,6 +3145,20 @@ void CmndBLEOperation(void){
 \*********************************************************************************************/
 static void BLEPostMQTTSeenDevices(int type) {
   int remains = 0;
+#ifdef MQTT_DATA_STRING
+  ResponseTime_P(PSTR(""));
+  String response_time = TasmotaGlobal.mqtt_data;
+
+  int maxlen = 1024;
+  char dest[maxlen];
+  do {
+    Response_P(response_time.c_str());  // Keep using same time stamp
+    remains = getSeenDevicesToJson(dest, maxlen);
+    ResponseAppend_P(dest);
+    // no retain - this is present devices, not historic
+    MqttPublishPrefixTopicRulesProcess_P((1== type) ? TELE : STAT, PSTR("BLE"));
+  } while (remains);
+#else
   nextSeenDev = 0;
 
   memset(TasmotaGlobal.mqtt_data, 0, sizeof(TasmotaGlobal.mqtt_data));
@@ -3156,6 +3173,7 @@ static void BLEPostMQTTSeenDevices(int type) {
     MqttPublishPrefixTopicRulesProcess_P((1== type) ? TELE : STAT, PSTR("BLE"));
   } while (remains);
 //  }
+#endif
 }
 
 static void BLEPostMQTT(bool onlycompleted) {
@@ -3395,7 +3413,7 @@ static void BLEDiag()
   uint32_t totalCount = BLEAdvertisment.totalCount;
   uint32_t deviceCount = seenDevices.size();
 #ifdef BLE_ESP32_DEBUG
-  if (BLEDebugMode > 0) AddLog_P(LOG_LEVEL_INFO,PSTR("BLE: scans:%u,advertisements:%u,devices:%u,resets:%u,BLEStop:%d,BLERunning:%d,BLERunningScan:%d,BLELoopCount:%u,BLEOpCount:%u"), BLEScanCount, totalCount, deviceCount, BLEResets, BLEStop, BLERunning, BLERunningScan, BLELoopCount, BLEOpCount);
+  if (BLEDebugMode > 0) AddLog(LOG_LEVEL_INFO,PSTR("BLE: scans:%u,advertisements:%u,devices:%u,resets:%u,BLEStop:%d,BLERunning:%d,BLERunningScan:%d,BLELoopCount:%u,BLEOpCount:%u"), BLEScanCount, totalCount, deviceCount, BLEResets, BLEStop, BLERunning, BLERunningScan, BLELoopCount, BLEOpCount);
 #endif
 }
 
