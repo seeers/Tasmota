@@ -355,6 +355,8 @@
 #define D_CMND_GLOBAL_TEMP "GlobalTemp"
 #define D_CMND_GLOBAL_HUM "GlobalHum"
 
+#define D_SO_WIFINOSLEEP "WifiNoSleep"
+
 #ifdef ESP32
 #define D_CMND_TOUCH_CAL "TouchCal"
 #define D_CMND_TOUCH_THRES "TouchThres"
@@ -378,6 +380,7 @@
 #define D_CMND_MQTTPASSWORD "MqttPassword"
 #define D_CMND_MQTTKEEPALIVE "MqttKeepAlive"
 #define D_CMND_MQTTTIMEOUT "MqttTimeout"
+#define D_CMND_MQTTWIFITIMEOUT "MqttWifiTimeout"
 #define D_CMND_TLSKEY "TLSKey"
 #define D_CMND_FULLTOPIC "FullTopic"
 #define D_CMND_PREFIX "Prefix"
