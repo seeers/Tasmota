@@ -161,11 +161,11 @@ uDisplay *udisp;
       replacepin(&cp, Pin(GPIO_OLED_RESET));
 
       if (wire_n == 1) {
-        Wire.begin(sda, scl);
+        I2cBegin(sda, scl);
       }
 #ifdef ESP32
       if (wire_n == 2) {
-        Wire1.begin(sda, scl);
+        I2c2Begin(sda, scl);
       }
       if (I2cSetDevice(i2caddr, wire_n - 1)) {
         I2cSetActiveFound(i2caddr, "DSP-I2C", wire_n - 1);
@@ -257,11 +257,11 @@ uDisplay *udisp;
       scl = replacepin(&cp, Pin(GPIO_I2C_SCL, wire_n));
       sda = replacepin(&cp, Pin(GPIO_I2C_SDA, wire_n));
       if (wire_n == 0) {
-        Wire.begin(sda, scl);
+        I2cBegin(sda, scl);
       }
 #ifdef ESP32
       if (wire_n == 1) {
-        Wire1.begin(sda, scl, 400000);
+        I2c2Begin(sda, scl, 400000);
       }
       if (I2cSetDevice(i2caddr, wire_n)) {
         I2cSetActiveFound(i2caddr, "FT5206", wire_n);
@@ -294,14 +294,20 @@ uDisplay *udisp;
     }
 #endif
 
+    uint8_t inirot = Settings->display_rotate;
+
+    cp = strstr(ddesc, ":r,");
+    if (cp) {
+      cp+=3;
+      inirot = strtol(cp, &cp, 10);
+    }
+
     // release desc buffer
     if (fbuff) free(fbuff);
 
     renderer = udisp->Init();
     if (!renderer) return 0;
 
-    Settings->display_width = renderer->width();
-    Settings->display_height = renderer->height();
     fg_color = renderer->fgcol();
     bg_color = renderer->bgcol();
     color_type = renderer->color_type();
@@ -311,8 +317,12 @@ uDisplay *udisp;
     renderer->SetDimCB(Core2DisplayDim);
 #endif
 
-    renderer->DisplayInit(DISPLAY_INIT_MODE, Settings->display_size, Settings->display_rotate, Settings->display_font);
-    renderer->dim(Settings->display_dimmer);
+    renderer->DisplayInit(DISPLAY_INIT_MODE, Settings->display_size, inirot, Settings->display_font);
+
+    Settings->display_width = renderer->width();
+    Settings->display_height = renderer->height();
+    
+    ApplyDisplayDimmer();
 
 #ifdef SHOW_SPLASH
     renderer->Splash();
